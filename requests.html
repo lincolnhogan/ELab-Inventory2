@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Components</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #requestList {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 350px;
+            margin: 10px auto;
+            text-align: left;
+        }
+        .request {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h2>Request Components</h2>
+
+    <h3>Submit a Request</h3>
+    <form id="requestForm" onsubmit="submitRequest(event)">
+        <input type="text" id="componentName" placeholder="Component Name" required><br><br>
+        <input type="number" id="quantity" placeholder="Quantity" min="1" required><br><br>
+        <input type="text" id="studentName" placeholder="Your Name" required><br><br>
+        <button type="submit">Submit Request</button>
+    </form>
+
+    <h3>Requests</h3>
+    <div id="requestList"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadRequests);
+
+        // Load requests from localStorage and render them
+        function loadRequests() {
+            const requests = JSON.parse(localStorage.getItem("requests")) || [];
+            const requestList = document.getElementById("requestList");
+            requestList.innerHTML = "";
+            requests.forEach(request => {
+                const div = document.createElement("div");
+                div.className = "request";
+                div.innerHTML = `
+                    <strong>${request.component}</strong><br>
+                    Quantity: ${request.quantity}<br>
+                    Requested by: ${request.student}<br>
+                `;
+                requestList.appendChild(div);
+            });
+        }
+
+        // Submit request
+        function submitRequest(event) {
+            event.preventDefault();
+            const component = document.getElementById("componentName").value.trim();
+            const quantity = document.getElementById("quantity").value.trim();
+            const student = document.getElementById("studentName").value.trim();
+
+            const request = { component, quantity, student };
+            const requests = JSON.parse(localStorage.getItem("requests")) || [];
+            requests.push(request);
+            localStorage.setItem("requests", JSON.stringify(requests));
+
+            loadRequests();
+            document.getElementById("requestForm").reset();
+        }
+    </script>
+
+    <footer>
+        <a href="home.html">Go Back to Inventory</a>
+    </footer>
+</body>
+</html>

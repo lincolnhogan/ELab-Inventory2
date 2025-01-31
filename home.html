@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICS ELab Inventory Locator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #adminPanel {
+            display: none; /* Hidden unless admin */
+        }
+        #loginBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #itemList {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #f37c26;
+            padding: 10px;
+            width: 600px;
+            margin: 10px auto;
+            text-align: left;
+        }
+        .item {
+            padding: 5px;
+            border-bottom: 1px solid #f37c26;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item span {
+            flex: 1;
+            margin: 0 5px;
+        }
+        .delete-btn {
+            color: red;
+            cursor: pointer;
+            display: none; /* Only visible for admin */
+        }
+    </style>
+</head>
+<body>
+    <a href="requests.html">Request an Item</a>
+    <button id="loginBtn" onclick="toggleLogin()">Login</button>
+
+    <h2>ICS ELab Inventory Locator</h2>
+
+    <input type="text" id="searchInput" placeholder="Search items..." onkeyup="searchItems()">
+    
+    <br><br>
+
+    <div id="adminPanel">
+        <input type="text" id="itemName" placeholder="Item Name">
+        <input type="number" id="itemQuantity" placeholder="Quantity" min="1">
+        <select id="itemLocation">
+            <option value="Shelf A">Shelf A</option>
+            <option value="Shelf B">Shelf B</option>
+            <option value="Cabinet 1">Cabinet 1</option>
+            <option value="Cabinet 2">Cabinet 2</option>
+            <option value="Drawer X">Drawer X</option>
+        </select>
+        <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <h3>Item List</h3>
+    <div id="itemList"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadItems);
+
+        let isAdmin = false; // Tracks if user is admin
+
+        function toggleLogin() {
+            if (isAdmin) {
+                logout();
+            } else {
+                let password = prompt("Enter admin password:");
+                if (password === "lincolnrocks") {
+                    isAdmin = true;
+                    document.getElementById("adminPanel").style.display = "block";
+                    document.getElementById("loginBtn").textContent = "Logout";
+                    showDeleteButtons(true);
+                } else {
+                    alert("Incorrect password!");
+                }
+            }
+        }
+
+        function logout() {
+            isAdmin = false;
+            document.getElementById("adminPanel").style.display = "none";
+            document.getElementById("loginBtn").textContent = "Login";
+            showDeleteButtons(false);
+        }
+
+        function addItem() {
+            if (!isAdmin) return; // Prevent unauthorized adding
+
+            let name = document.getElementById("itemName").value.trim();
+            let quantity = document.getElementById("itemQuantity").value.trim();
+            let location = document.getElementById("itemLocation").value.trim();
+
+            if (name === "" || quantity === "" || location === "") return;
+
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            items.push({ name, quantity, location });
+            localStorage.setItem("items", JSON.stringify(items));
+
+            renderItems();
+            document.getElementById("itemName").value = "";
+            document.getElementById("itemQuantity").value = "";
+            document.getElementById("itemLocation").value = "";
+        }
+
+        function renderItems() {
+            let list = document.getElementById("itemList");
+            list.innerHTML = "";
+
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            items.forEach((item, index) => {
+                let div = document.createElement("div");
+                div.className = "item";
+                div.innerHTML = `
+                    <span><strong>${item.name}</strong></span>
+                    <span>Qty: ${item.quantity}</span>
+                    <span>Loc: ${item.location}</span>
+                    <span class="delete-btn" onclick="deleteItem(${index})">❌</span>
+                `;
+                list.appendChild(div);
+            });
+
+            showDeleteButtons(isAdmin);
+        }
+
+        function deleteItem(index) {
+            if (!isAdmin) return; // Prevent unauthorized deletion
+
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            items.splice(index, 1);
+            localStorage.setItem("items", JSON.stringify(items));
+            renderItems();
+        }
+
+        function searchItems() {
+            let filter = document.getElementById("searchInput").value.toLowerCase();
+            let items = document.getElementsByClassName("item");
+
+            for (let i = 0; i < items.length; i++) {
+                let txtValue = items[i].textContent || items[i].innerText;
+                items[i].style.display = txtValue.toLowerCase().includes(filter) ? "" : "none";
+            }
+        }
+
+        function loadItems() {
+            renderItems();
+        }
+
+        function showDeleteButtons(show) {
+            let buttons = document.getElementsByClassName("delete-btn");
+            for (let btn of buttons) {
+                btn.style.display = show ? "inline" : "none";
+            }
+        }
+    </script>
+
+</body>
+</html>
